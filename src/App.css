@@ -1,0 +1,57 @@
+html,
+body,
+#root,
+.App,
+.chat {
+  height: 100%;
+}
+.App {
+  display: grid;
+  grid-template-rows: auto 2rem ;
+}
+
+.control{
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.chat {
+  padding: 0 1rem 0 0.5rem;
+  background-color: rgb(14,14,16);
+  display: flex;
+  flex-direction: column-reverse;
+  overflow: auto;
+  color: #FFF;
+}
+
+img {
+  vertical-align: middle;
+}
+
+.msgContainer {
+  background-color: rgb(40,40,43);
+  padding: .7rem;
+  margin: 0.2rem 0;
+  border-radius: 1.2rem;
+  border: 2px solid transparent;
+  
+}
+
+.new {
+  border: 2px solid orange;
+  animation-name: rotate-color;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+}
+
+.badge{
+  margin-right: 4px;
+}
+
+@keyframes rotate-color {
+  0% {filter:hue-rotate(0)}
+  25% {filter:hue-rotate(90deg)}
+  50% {filter:hue-rotate(180deg)}
+  75% {filter:hue-rotate(270deg)}
+}
