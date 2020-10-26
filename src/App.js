@@ -2,6 +2,7 @@ import React, {useState, useEffect, useCallback} from "react";
 import {Chatbox} from "./components/chatbox";
 import "./App.css";
 import tmi from "tmi.js";
+import settingsIcon from './settings.svg';
 
 const channel = window.location.pathname.replace('/chat/', '');
 document.title = `${channel}的聊天室`
@@ -24,7 +25,8 @@ function App() {
   const [isFiltering, setFilter] = useState(false);
   const [connected, setConnected] = useState(false);
   const [channelID, setChannelID] = useState('');
-  const [badgeList, setBadge] = useState({})
+  const [badgeList, setBadge] = useState({});
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     client.connect()
@@ -56,6 +58,14 @@ function App() {
       localStorage.setItem(`checked_${channel}`, JSON.stringify([...newSet]))
     }
   }, [checked, setChecked])
+  
+  const toggleSettingsModal = () => {
+    setShowSettings(prevState => {
+      document.querySelector('.chat').classList.toggle('blur', !prevState);
+      return !prevState;
+    });
+
+  }
 
 
   const handleMessage = useCallback((_channel, tags, message) =>{
@@ -87,6 +97,9 @@ function App() {
 
   return (
     <div className="App">
+      {showSettings && <div className='modal'>
+          <button onClick={()=>{toggleSettingsModal()}}>關閉</button>
+        </div>}
       <div className="chat">
       <div>
       </div>
@@ -107,7 +120,11 @@ function App() {
       <div className="control">
         <div><input type='checkbox' onClick={()=>setFilter(!isFiltering)} value={isFiltering} />僅顯示新訊息
         </div>
-        <button onClick={()=>{setChecked(new Set());localStorage.removeItem(`checked_${channel}`);}}>重置已讀</button>
+        <input type='text' className='control__textbox' disabled/>
+        <button className='control__button' onClick={()=>{setChecked(new Set());localStorage.removeItem(`checked_${channel}`);}}>重置已讀</button>
+        <button className='control__button' onClick={()=>{toggleSettingsModal()}}>
+          <img src={settingsIcon} className='control__icon' alt='settings'/>設定
+        </button>
       </div>
     </div>
   );
