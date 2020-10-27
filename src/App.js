@@ -1,5 +1,6 @@
 import React, {useState, useEffect, useCallback} from "react";
 import {Chatbox} from "./components/chatbox";
+import {LanguageContext, languages} from './components/languageContext';
 import "./App.css";
 import tmi from "tmi.js";
 import settingsIcon from './settings.svg';
@@ -27,6 +28,7 @@ function App() {
   const [channelID, setChannelID] = useState('');
   const [badgeList, setBadge] = useState({});
   const [showSettings, setShowSettings] = useState(false);
+  const [language, setLanguage] = useState(languages.zh);
 
   useEffect(() => {
     client.connect()
@@ -93,12 +95,17 @@ function App() {
     })}
   }, [handleMessage, connected])
 
-    
-
   return (
     <div className="App">
+      <LanguageContext.Provider value={language}>
       {showSettings && <div className='modal'>
-          <button onClick={()=>{toggleSettingsModal()}}>關閉</button>
+          <label>{language.language}</label>
+          <select value={language.code} onChange={e=>setLanguage(languages[e.target.value])}>
+            {Object.keys(languages).map(key => {
+              return <option key={key} value={key}>{key}</option>
+            })}
+          </select>
+          <button onClick={()=>{toggleSettingsModal()}}>{language.close}</button>
         </div>}
       <div className="chat">
       <div>
@@ -115,17 +122,18 @@ function App() {
             ></Chatbox>
           );
         })}
-        {!connected && <div>連線中</div>}
+        {!connected && <div>{language.connecting}</div>}
       </div>
       <div className="control">
-        <div><input type='checkbox' onClick={()=>setFilter(!isFiltering)} value={isFiltering} />僅顯示新訊息
+        <div><input type='checkbox' onClick={()=>setFilter(!isFiltering)} value={isFiltering} />{language.onlyNew}
         </div>
         <input type='text' className='control__textbox' disabled/>
-        <button className='control__button' onClick={()=>{setChecked(new Set());localStorage.removeItem(`checked_${channel}`);}}>重置已讀</button>
+      <button className='control__button' onClick={()=>{setChecked(new Set());localStorage.removeItem(`checked_${channel}`);}}>{language.resetRead}</button>
         <button className='control__button' onClick={()=>{toggleSettingsModal()}}>
-          <img src={settingsIcon} className='control__icon' alt='settings'/>設定
+          <img src={settingsIcon} className='control__icon' alt='settings'/>{language.settings}
         </button>
       </div>
+      </LanguageContext.Provider>
     </div>
   );
 }
