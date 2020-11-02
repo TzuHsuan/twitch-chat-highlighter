@@ -1,14 +1,19 @@
-html,
-body,
-#root,
-.App,
-.chat {
-  height: 100%;
+body {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
+  height: 100%;
 }
+
+html,
+#root{
+  height: 100%;
+}
+
 .App {
+  height: 100%;
   display: grid;
-  grid-template-rows: auto 2rem ;
+  grid-template-rows: 1fr 2rem ;
 }
 
 .control{
@@ -52,20 +57,30 @@ img {
   margin-right: 4px;
 }
 
-.modal{
+.modal {
+  z-index: 2;
+  position: fixed;
+  height: 90vh;
+  width: 100vw;
+  display: grid;
+  place-items: center;
+}
+
+.modal__panel{
+  filter: blur(0);
   padding: 20px;
   border-radius: .5rem;
   z-index: 2;
-  position: fixed;
-  height: 20rem;
-  margin-top: -10rem;
-  width: 30rem;
-  margin-left: -15rem;
   background-color: rgb(74,74,76);
   color: white;
-  top: 50%;
-  left: 50%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.modal__main{
+  margin: 10px;
   display: flex;
+  flex-direction: column;
 }
 
 .modal>label{
@@ -80,7 +95,22 @@ img {
 .modal>button {
   display: block;
   margin-left: auto;
-  margin-top: auto;
+}
+
+.status {
+  width: 7em;
+}
+
+.status__indicator--ok {
+  color: limegreen;
+}
+
+.status__indicator--reconnecting {
+  color: yellow;
+}
+
+.status__indicator--disconnected {
+  color: red;
 }
 
 .control__button{
@@ -97,10 +127,6 @@ img {
 .control__icon{
   height: 1rem;
   margin-top: -3px;
-}
-
-.blur {
-  filter: blur(4px);
 }
 
 @keyframes rotate-color {

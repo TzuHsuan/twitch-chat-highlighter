@@ -5,8 +5,8 @@ import "./App.css";
 import tmi from "tmi.js";
 import settingsIcon from './settings.svg';
 
-const channel = window.location.pathname.replace('/chat/', '');
-document.title = `${channel}的聊天室`
+//const channel = new URL(window.location).searchParams.get('channel'); 
+//document.title = `${channel}的聊天室`
 
 const client = new tmi.Client({
   connection: {
@@ -14,8 +14,9 @@ const client = new tmi.Client({
     secure: true,
   },
   identity: {},
-  channels: [channel],
+  channels: [],
 });
+client.connect().catch(err => {throw err});
 
 
 const botsList = new Set(['streamelements', 'nightbot'])
@@ -29,16 +30,58 @@ function App() {
   const [badgeList, setBadge] = useState({});
   const [showSettings, setShowSettings] = useState(false);
   const [language, setLanguage] = useState(languages.zh);
+  const [channel, setChannel] = useState('');
+  const [status, setStatus] = useState('disconnected');
+  const channelInput = React.useRef('');
 
   useEffect(() => {
-    client.connect()
-    .then(()=>setConnected(true))
-    .catch(console.error);
+    let connectListener = () => {
+      setConnected(true);
+    }
+    let disconnectListener = () => {
+      setStatus('disconnected');
+    }
+    let reconnectListener = () => {
+      setStatus('reconnecting');
+    }
+    client.on('connected', connectListener);
+    client.on('disconnected',disconnectListener);
+    client.on('reconnect', reconnectListener);
+    return (()=>{
+      client.removeListener('connected', connectListener);
+      client.removeListener('disconnected', disconnectListener);
+      client.removeListener('reconnect', reconnectListener);
+    }) 
   }, []);
 
   useEffect(()=>{
-    setChecked(new Set(JSON.parse(localStorage.getItem(`checked_${channel}`))))
-  }, [])
+    if(channel===''||channel===null){
+      setChannel(localStorage.getItem('lastChannel'));
+    }else{
+      localStorage.setItem('lastChannel', channel);
+    }
+    setChecked(new Set(JSON.parse(localStorage.getItem(`checked_${channel}`))));
+  }, [channel])
+  
+  useEffect(()=>{
+    setStatus('disconnected')
+    if(connected && channel){
+      client.join(channel)
+      .then(()=>{
+        setStatus('ok');
+        document.title = `${channel}的聊天室`;
+      })
+      .catch(()=>{
+        setStatus('disconnected');
+        setChannel('');
+      })
+    }
+    return(()=>{
+      client.part(channel)
+      .then(()=>console.log('disconnected from ', channel))
+      .catch(console.log);
+    })
+  }, [connected, channel, setStatus])
 
   useEffect(()=>{
     if(channelID!==''){
@@ -59,11 +102,10 @@ function App() {
       setChecked(newSet)
       localStorage.setItem(`checked_${channel}`, JSON.stringify([...newSet]))
     }
-  }, [checked, setChecked])
+  }, [checked, setChecked, channel])
   
   const toggleSettingsModal = () => {
     setShowSettings(prevState => {
-      document.querySelector('.chat').classList.toggle('blur', !prevState);
       return !prevState;
     });
 
@@ -98,15 +140,28 @@ function App() {
   return (
     <div className="App">
       <LanguageContext.Provider value={language}>
-      {showSettings && <div className='modal'>
-          <label>{language.language}</label>
-          <select value={language.code} onChange={e=>setLanguage(languages[e.target.value])}>
-            {Object.keys(languages).map(key => {
-              return <option key={key} value={key}>{key}</option>
-            })}
-          </select>
+      {!channel && <div className='modal'><div className='modal__panel'>
+        <form onSubmit={e=>{e.preventDefault();setChannel(channelInput.current.value)}}>
+          <label>Channel</label>
+          <input type='text' ref={channelInput}></input>
+        </form>
+        </div></div>}
+      {showSettings && <div className='modal'><div className='modal__panel'>
+          <h2>Settings</h2>
+          <div className='modal__main'>
+            <label>{language.language}</label>
+            <select value={language.code} onChange={e=>setLanguage(languages[e.target.value])}>
+              {Object.keys(languages).map(key => {
+                return <option key={key} value={key}>{key}</option>
+              })}
+            </select>
+            <form onSubmit={e=>{e.preventDefault();setChannel(channelInput.current.value)}}>
+              <label>Channel</label><br></br>
+              <input type='text' ref={channelInput}></input>
+            </form>
+          </div>
           <button onClick={()=>{toggleSettingsModal()}}>{language.close}</button>
-        </div>}
+        </div></div>}
       <div className="chat">
       <div>
       </div>
@@ -125,6 +180,7 @@ function App() {
         {!connected && <div>{language.connecting}</div>}
       </div>
       <div className="control">
+        <div className='status'><span className={`status__indicator--${status}`}>█</span>{language.status[status]}</div>
         <div><input type='checkbox' onClick={()=>setFilter(!isFiltering)} value={isFiltering} />{language.onlyNew}
         </div>
         <input type='text' className='control__textbox' disabled/>
