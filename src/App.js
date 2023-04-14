@@ -184,7 +184,6 @@ function App() {
         <div className='status'><span className={`status__indicator--${status}`}>█</span>{language.status[status]}</div>
         <div><input type='checkbox' onClick={()=>setFilter(!isFiltering)} value={isFiltering} />{language.onlyNew}
         </div>
-        <input type='text' className='control__textbox' disabled/>
       <button className='control__button' onClick={()=>{setChecked(new Set());localStorage.removeItem(`checked_${channel}`);}}>{language.resetRead}</button>
         <button className='control__button' onClick={()=>{toggleSettingsModal()}}>
           <img src={settingsIcon} className='control__icon' alt='settings'/>{language.settings}

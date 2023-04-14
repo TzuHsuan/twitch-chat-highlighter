@@ -10,6 +10,10 @@ html,
   height: 100%;
 }
 
+h2 {
+  margin: auto 0;
+}
+
 .App {
   height: 100%;
   display: grid;
@@ -17,11 +21,11 @@ html,
 }
 
 .control{
-  width: 70%;
   margin: auto;
   display: flex;
-  justify-content: space-evenly;
+  justify-content: center;
   align-items: center;
+  gap: 1em;
 }
 
 .chat {
@@ -97,9 +101,6 @@ img {
   margin-left: auto;
 }
 
-.status {
-  width: 7em;
-}
 
 .status__indicator--ok {
   color: limegreen;
