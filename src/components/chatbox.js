@@ -30,7 +30,7 @@ const Message = ({msgStr, emotes}) => {
   return(<div>{words.map(word => {
     let curPos = pos
     pos += word.length + 1
-   if(!index.has(curPos)) return word
+   if(!index.has(curPos)) return word + " "
    return <img key={curPos} alt={`emote for ${word}`} className="emoticon" src={`https://static-cdn.jtvnw.net/emoticons/v2/${index.get(curPos)}/default/dark/1.0`} /> 
   })}</div>)
 }

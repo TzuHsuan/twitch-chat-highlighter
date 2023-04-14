@@ -24,9 +24,9 @@ export const languages = {
     resetRead: 'Reset Read',
     onlyNew: 'New messages only',
     status: {
-        ok: 'ok',
-        reconnecting: 'reconnecting',
-        disconnected: 'disconnected'
+        ok: 'Connected',
+        reconnecting: 'Reconnecting',
+        disconnected: 'Disconnected'
     }
     }
 }

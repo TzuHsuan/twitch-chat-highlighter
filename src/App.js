@@ -32,13 +32,14 @@ function App() {
   const [language, setLanguage] = useState(languages.zh);
   const [channel, setChannel] = useState('');
   const [status, setStatus] = useState('disconnected');
-  const channelInput = React.useRef('');
+  const channelInput = React.useRef(null);
 
   useEffect(() => {
     let connectListener = () => {
       setConnected(true);
     }
-    let disconnectListener = () => {
+    let disconnectListener = (reason) => {
+      console.log(`Disconnected due to ${reason}`)
       setStatus('disconnected');
     }
     let reconnectListener = () => {
@@ -69,7 +70,7 @@ function App() {
       client.join(channel)
       .then(()=>{
         setStatus('ok');
-        document.title = `${channel}的聊天室`;
+        document.title = `${channel}的聊天室`
       })
       .catch(()=>{
         setStatus('disconnected');
@@ -81,7 +82,7 @@ function App() {
       .then(()=>console.log('disconnected from ', channel))
       .catch(console.log);
     })
-  }, [connected, channel, setStatus])
+  }, [connected, channel])
 
   useEffect(()=>{
     if(channelID!==''){
