@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback} from "react";
+import React, {useState, useEffect, useCallback, useRef} from "react";
 import {Chatbox} from "./components/chatbox";
 import {LanguageContext, languages} from './components/languageContext';
 import "./App.css";
@@ -14,15 +14,15 @@ const TwitchAuth = "https://id.twitch.tv/oauth2/authorize?response_type=token" +
                    "&scope=" + encodeURIComponent("chat:edit chat:read channel:read:redemptions channel:read:subscriptions")
 
 
-
-const client = new tmi.Client({
-  connection: {
-    reconnect: true,
-    secure: true,
-  },
-  identity: {username: "zuphertron", password: "oauth:9zwej9y3phkc5ecwii3s9fk81gx2od"},
-  channels: [],
-});
+let client
+// const client = new tmi.Client({
+//   connection: {
+//     reconnect: true,
+//     secure: true,
+//   },
+//   identity: {},
+//   channels: [],
+// });
 
 const botsList = new Set(['streamelements', 'nightbot'])
 
@@ -115,6 +115,8 @@ function App() {
 
   //Add chat EventListeners
   useEffect(() => {
+    console.log(client)
+    if (!client) return
     let connectListener = () => {
       setConnected(true);
     }
@@ -134,27 +136,42 @@ function App() {
       client.removeListener('disconnected', disconnectListener);
       client.removeListener('reconnect', reconnectListener);
     }) 
-  }, []);
+  }, [connected]);
+
+  const userRef = useRef(userName)
+  userRef.current = userName
+  const keyRef = useRef(key)
+  keyRef.current = key
 
   //connect Chat Client
   useEffect(() => {
+    setTimeout(() => {
+      let user = userRef.current
+      console.log("setup "+ user)
+      let login = user? {username: user, password: "oauth:"+keyRef.current} : {}
 
-    console.log(userName, key)
-    if (userName) {
-      if(client.identity && client.identity.username === userName) return
-      console.log(client.readyState())
-      if (client.readyState() === "OPEN" || client.readyState() === "CONNECTING") client.disconnect()
-      client.identity = {username: userName, password: "oauth:"+key}
-      setTimeout(() => {
-        client.connect().catch(err => {console.log(err)})
-      }, 1000);
-    } else {
-      client.connect().catch(err => {console.log(err)})
-    }
-  }, [userName])
+      client = new tmi.Client({
+        connection: {
+          reconnect: true,
+          secure: true,
+        },
+        identity: login,
+        channels: [],
+      });
+
+      // console.log(userName, key)
+      // if (userName) {
+      //   client.identity = {username: userName, password: "oauth:"+key}
+      //   client.connect().catch(err => {console.log(err)})
+      // } else {
+        client.connect().then(res => setConnected(true)).catch(err => {console.log(err)})
+      // }
+    }, 2000);
+  }, [])
 
   //connect to channel
   useEffect(()=>{
+    if (!client) return
     setStatus('disconnected')
 
     if(connected && channel){
@@ -173,7 +190,7 @@ function App() {
       .then(()=>console.log('disconnected from ', channel))
       .catch(console.log);
     })
-  }, [connected, channel, userName])
+  }, [connected, channel])
 
   //Fetch badges
   useEffect(()=>{
@@ -244,12 +261,12 @@ function App() {
 
   
   useEffect(()=>{
-    console.log("add listener")
+    if (!client) return
     client.on("message", handleMessage);
     return (()=>{
       client.removeListener("message", handleMessage);
     })
-  }, [])
+  }, [connected])
   
   // useEffect(()=>{
   // if(connected){
