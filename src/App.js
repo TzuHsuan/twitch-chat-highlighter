@@ -20,11 +20,9 @@ const client = new tmi.Client({
     reconnect: true,
     secure: true,
   },
-  identity: {},
+  identity: {username: "zuphertron", password: "oauth:9zwej9y3phkc5ecwii3s9fk81gx2od"},
   channels: [],
 });
-client.connect().catch(err => {throw err});
-
 
 const botsList = new Set(['streamelements', 'nightbot'])
 
@@ -41,7 +39,9 @@ function App() {
   const [channel, setChannel] = useState('');
   const [status, setStatus] = useState('disconnected');
   const [key, setKey] = useState('');
+  const [userName, setUserName] = useState('');
   const channelInput = React.useRef(null);
+  const message = React.useRef(null);
 
   //Strip access token from URI if present
   useEffect(() => {
@@ -55,6 +55,64 @@ function App() {
     })
   }, []);
 
+  //Load Channel from local storage
+  useEffect(()=>{
+    if(channel===''||channel===null){
+      setChannel(localStorage.getItem('lastChannel'));
+    }else{
+      localStorage.setItem('lastChannel', channel);
+    }
+    setChecked(new Set(JSON.parse(localStorage.getItem(`checked_${channel}`))));
+  }, [channel])
+  
+  //Load Key from local storage, cleanup storage if stale
+  useEffect(()=>{
+    if(key===''||key===null){
+      let storedKey = localStorage.getItem('userToken')
+      if (!storedKey) return
+
+      fetch('https://id.twitch.tv/oauth2/validate' , {headers: {"Authorization": "OAuth " + storedKey}})
+      .then(res => {
+        if (res.ok) {
+          setKey(storedKey)
+        } else {
+          localStorage.removeItem('userToken')
+        }
+      })
+
+    }else{
+      localStorage.setItem('userToken', key);
+    }
+  }, [key])
+
+  //Fetch userID from channel
+  useEffect(() => {
+      if (channel === '' || key === '') return
+      const headers = new Headers()
+      headers.append("Authorization", "Bearer "+key)
+      headers.append("Client-Id", "b37i4lohsntm7xwnhafv54cflutqmp")
+
+      fetch('https://api.twitch.tv/helix/users?login=' + channel, {headers: headers})
+      .then(res => res.json())
+      .then(data => {
+        setChannelUserID(data.data[0].id)
+      })
+  }, [channel, key])
+
+  //Fetch userID associated with key
+  useEffect(() => {
+      if (key === '') return
+      const headers = new Headers()
+      headers.append("Authorization", "Bearer "+key)
+      headers.append("Client-Id", "b37i4lohsntm7xwnhafv54cflutqmp")
+
+      fetch('https://api.twitch.tv/helix/users', {headers: headers})
+      .then(res => res.json())
+      .then(data => {
+        setUserName(data.data[0].login)
+      })
+  }, [key])
+
   //Add chat EventListeners
   useEffect(() => {
     let connectListener = () => {
@@ -62,6 +120,7 @@ function App() {
     }
     let disconnectListener = (reason) => {
       console.log(`Disconnected due to ${reason}`)
+      setConnected(false)
       setStatus('disconnected');
     }
     let reconnectListener = () => {
@@ -77,34 +136,27 @@ function App() {
     }) 
   }, []);
 
-  //Fetch userID from channel
+  //connect Chat Client
   useEffect(() => {
-      if (channel === '' || key === '') return
-      const headers = new Headers()
-      headers.append("Authorization", "Bearer y4y8pcjkybkwp5h4ksrfxfccwg3fjm")
-      headers.append("Client-Id", "b37i4lohsntm7xwnhafv54cflutqmp")
 
-      fetch('https://api.twitch.tv/helix/users?login=' + channel, {headers: headers})
-      .then(res => res.json())
-      .then(data => {
-        console.log(data.data[0].id)
-        setChannelUserID(data.data[0].id)
-      })
-  }, [channel, key])
-
-  //Load Channel from local storage
-  useEffect(()=>{
-    if(channel===''||channel===null){
-      setChannel(localStorage.getItem('lastChannel'));
-    }else{
-      localStorage.setItem('lastChannel', channel);
+    console.log(userName, key)
+    if (userName) {
+      if(client.identity && client.identity.username === userName) return
+      console.log(client.readyState())
+      if (client.readyState() === "OPEN" || client.readyState() === "CONNECTING") client.disconnect()
+      client.identity = {username: userName, password: "oauth:"+key}
+      setTimeout(() => {
+        client.connect().catch(err => {console.log(err)})
+      }, 1000);
+    } else {
+      client.connect().catch(err => {console.log(err)})
     }
-    setChecked(new Set(JSON.parse(localStorage.getItem(`checked_${channel}`))));
-  }, [channel])
-  
+  }, [userName])
+
   //connect to channel
   useEffect(()=>{
     setStatus('disconnected')
+
     if(connected && channel){
       client.join(channel)
       .then(()=>{
@@ -121,7 +173,7 @@ function App() {
       .then(()=>console.log('disconnected from ', channel))
       .catch(console.log);
     })
-  }, [connected, channel])
+  }, [connected, channel, userName])
 
   //Fetch badges
   useEffect(()=>{
@@ -129,14 +181,13 @@ function App() {
 
     (async () =>{
       const headers = new Headers()
-      headers.append("Authorization", "Bearer y4y8pcjkybkwp5h4ksrfxfccwg3fjm")
+      headers.append("Authorization", "Bearer "+key)
       headers.append("Client-Id", "b37i4lohsntm7xwnhafv54cflutqmp")
 
       let allBadges = await Promise.all([
       fetch('https://api.twitch.tv/helix/chat/badges/global', {headers: headers}).then(res => res.json()).then(res => {return res.data}),
       fetch(`https://api.twitch.tv/helix/chat/badges?broadcaster_id=${channelUserID}`, {headers: headers}).then(res => res.json()).then(res => {return res.data})
       ])
-      console.log(allBadges)
       let badgeCollection = {}
       allBadges[0].forEach(set => {
         let versions = {}
@@ -154,7 +205,6 @@ function App() {
 
         badgeCollection[set.set_id] = {...badgeCollection[set.set_id], ...versions}
       })
-      console.log(badgeCollection)
       setBadge(badgeCollection)
     })()
 
@@ -176,14 +226,14 @@ function App() {
   }
 
 
-  const handleMessage = useCallback((_channel, tags, message) =>{
+  const handleMessage = useCallback((_channel, tags, message, self) =>{
     const room = tags['room-id'];
     if(room !== channelID) {setChannelID(room)}
     let msgObj = {
-      id: tags.id,
+      id: self? Date.now():tags.id,
       displayName: tags['display-name'],
       username: tags.username,
-      timestamp: tags["tmi-sent-ts"],
+      timestamp: self? Date.now():tags["tmi-sent-ts"],
       color: tags.color,
       badges: tags.badges,
       message: message,
@@ -194,12 +244,20 @@ function App() {
 
   
   useEffect(()=>{
-  if(connected){
+    console.log("add listener")
     client.on("message", handleMessage);
     return (()=>{
       client.removeListener("message", handleMessage);
-    })}
-  }, [handleMessage, connected])
+    })
+  }, [])
+  
+  // useEffect(()=>{
+  // if(connected){
+  //   client.on("message", handleMessage);
+  //   return (()=>{
+  //     client.removeListener("message", handleMessage);
+  //   })}
+  // }, [handleMessage, connected])
 
   return (
     <div className="App">
@@ -246,9 +304,11 @@ function App() {
       </div>
       <div className="control">
         <div className='status'><span className={`status__indicator--${status}`}>█</span>{language.status[status]}</div>
-        <div><input type='checkbox' onClick={()=>setFilter(!isFiltering)} value={isFiltering} />{language.onlyNew}
-        </div>
-      <button className='control__button' onClick={()=>{setChecked(new Set());localStorage.removeItem(`checked_${channel}`);}}>{language.resetRead}</button>
+        <div><input type='checkbox' onClick={()=>setFilter(!isFiltering)} value={isFiltering} />{language.onlyNew} </div>
+        <form onSubmit={e=>{e.preventDefault();client.say(channel, message.current.value);message.current.value = ''}}>
+          <input type="textbox" ref={message}></input>
+        </form>
+        <button className='control__button' onClick={()=>{setChecked(new Set());localStorage.removeItem(`checked_${channel}`);}}>{language.resetRead}</button>
         <button className='control__button' onClick={()=>{toggleSettingsModal()}}>
           <img src={settingsIcon} className='control__icon' alt='settings'/>{language.settings}
         </button>

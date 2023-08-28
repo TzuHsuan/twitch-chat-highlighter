@@ -37,7 +37,6 @@ const Message = ({msgStr, emotes}) => {
 
 export const Chatbox = React.memo((props) => {
     const timestamp = new Date(parseInt(props.timestamp));
-    console.log(props.badges)
     
     return(
     <div className={`msgContainer${props.isNew?' new':''}`} onClick={()=>props.markChecked(props.username)}>
