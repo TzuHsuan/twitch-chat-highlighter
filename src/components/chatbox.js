@@ -6,11 +6,11 @@ const Badges = ({ userBadges, badgeList }) => {
   return(<span>
   {Object.keys(userBadges).map(key => {
     let version = userBadges[key]
-    let currentBadge = badgeList[key].versions[version];
+    let currentBadge = badgeList[key][version];
     if (!currentBadge) {
       return ''
     }
-    return <img key={key} className='badge' alt={currentBadge.description} src={currentBadge.image_url_1x} /> 
+    return <img key={key} className='badge' alt={key} src={currentBadge} /> 
   })}</span>)
 }
 
@@ -37,6 +37,7 @@ const Message = ({msgStr, emotes}) => {
 
 export const Chatbox = React.memo((props) => {
     const timestamp = new Date(parseInt(props.timestamp));
+    console.log(props.badges)
     
     return(
     <div className={`msgContainer${props.isNew?' new':''}`} onClick={()=>props.markChecked(props.username)}>
