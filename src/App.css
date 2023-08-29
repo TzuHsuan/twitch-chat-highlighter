@@ -130,6 +130,16 @@ img {
   margin-top: -3px;
 }
 
+.twitchLogin {
+  margin: 3px;
+  padding: 3px 6px;
+  background-color: #9400FF;
+  color: white;
+  border: none;
+  text-decoration: none;
+  border-radius: 3px;
+}
+
 @keyframes rotate-color {
   0% {filter:hue-rotate(0)}
   25% {filter:hue-rotate(90deg)}

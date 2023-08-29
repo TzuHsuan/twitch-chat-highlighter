@@ -15,15 +15,6 @@ const TwitchAuth = "https://id.twitch.tv/oauth2/authorize?response_type=token" +
 
 
 let client
-// const client = new tmi.Client({
-//   connection: {
-//     reconnect: true,
-//     secure: true,
-//   },
-//   identity: {},
-//   channels: [],
-// });
-
 const botsList = new Set(['streamelements', 'nightbot'])
 
 function App() {
@@ -40,8 +31,16 @@ function App() {
   const [status, setStatus] = useState('disconnected');
   const [key, setKey] = useState('');
   const [userName, setUserName] = useState('');
+  const [autoScroll, setAutoScroll] = useState(false);
   const channelInput = React.useRef(null);
   const message = React.useRef(null);
+  const chatDiv = React.useRef(null)
+
+  const logout = () => {
+    localStorage.removeItem('userToken')
+    setKey('')
+    setUserName('')
+  }
 
   //Strip access token from URI if present
   useEffect(() => {
@@ -115,7 +114,6 @@ function App() {
 
   //Add chat EventListeners
   useEffect(() => {
-    console.log(client)
     if (!client) return
     let connectListener = () => {
       setConnected(true);
@@ -147,7 +145,6 @@ function App() {
   useEffect(() => {
     setTimeout(() => {
       let user = userRef.current
-      console.log("setup "+ user)
       let login = user? {username: user, password: "oauth:"+keyRef.current} : {}
 
       client = new tmi.Client({
@@ -159,13 +156,7 @@ function App() {
         channels: [],
       });
 
-      // console.log(userName, key)
-      // if (userName) {
-      //   client.identity = {username: userName, password: "oauth:"+key}
-      //   client.connect().catch(err => {console.log(err)})
-      // } else {
         client.connect().then(res => setConnected(true)).catch(err => {console.log(err)})
-      // }
     }, 2000);
   }, [])
 
@@ -242,6 +233,10 @@ function App() {
 
   }
 
+  const scrollToBottom = () => {
+    const node = chatDiv.current
+    node.scrollTop = node.scrollHeight - node.offsetHeight
+  }
 
   const handleMessage = useCallback((_channel, tags, message, self) =>{
     const room = tags['room-id'];
@@ -256,9 +251,12 @@ function App() {
       message: message,
       emotes: tags.emotes
     }
-    setMessages(prevMsgs => [msgObj, ...prevMsgs.slice(0,150)]); 
+    setMessages(prevMsgs => [msgObj, ...prevMsgs.slice(0,150)]);
   },[channelID])
 
+  useEffect(()=>{
+    if(autoScroll) scrollToBottom()
+  })
   
   useEffect(()=>{
     if (!client) return
@@ -268,13 +266,6 @@ function App() {
     })
   }, [connected])
   
-  // useEffect(()=>{
-  // if(connected){
-  //   client.on("message", handleMessage);
-  //   return (()=>{
-  //     client.removeListener("message", handleMessage);
-  //   })}
-  // }, [handleMessage, connected])
 
   return (
     <div className="App">
@@ -298,13 +289,11 @@ function App() {
               <label>Channel</label><br></br>
               <input type='text' ref={channelInput}></input>
             </form>
-            <a href={TwitchAuth}>login to Twitch</a>
+            <button className="twitchLogin" onClick={logout}>Logout</button>
           </div>
           <button onClick={()=>{toggleSettingsModal()}}>{language.close}</button>
         </div></div>}
-      <div className="chat">
-      <div>
-      </div>
+      <div className="chat" ref={chatDiv} onMouseEnter={()=>setAutoScroll(false)} onMouseLeave={()=>setAutoScroll(true)}>
         {messages.map((message) => {
           if((isFiltering && checked.has(message.username))||botsList.has(message.username)) return null;
           return (
@@ -322,9 +311,10 @@ function App() {
       <div className="control">
         <div className='status'><span className={`status__indicator--${status}`}>█</span>{language.status[status]}</div>
         <div><input type='checkbox' onClick={()=>setFilter(!isFiltering)} value={isFiltering} />{language.onlyNew} </div>
-        <form onSubmit={e=>{e.preventDefault();client.say(channel, message.current.value);message.current.value = ''}}>
+        {(!userName) && <a className="twitchLogin" href={TwitchAuth}>login to Twitch</a>}
+        {(userName) && <form onSubmit={e=>{e.preventDefault();client.say(channel, message.current.value);message.current.value = ''}}>
           <input type="textbox" ref={message}></input>
-        </form>
+        </form>}
         <button className='control__button' onClick={()=>{setChecked(new Set());localStorage.removeItem(`checked_${channel}`);}}>{language.resetRead}</button>
         <button className='control__button' onClick={()=>{toggleSettingsModal()}}>
           <img src={settingsIcon} className='control__icon' alt='settings'/>{language.settings}
