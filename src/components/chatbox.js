@@ -41,7 +41,8 @@ const SubMessage = (props) => {
 
   let emotes = {}
   props.emotes.forEach(emote => {
-    emotes[emote.id] = [...emotes[emote.id], `${emote.start}-${emote.end}`]
+    let existing = emotes[emote.id] ? emotes[emote.id] : []
+    emotes[emote.id] = [...existing, `${emote.start}-${emote.end}`]
   })
 
   let isGift = props.recipientUser? true : false
