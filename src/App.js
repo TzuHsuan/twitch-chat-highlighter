@@ -229,7 +229,7 @@ function App() {
   useEffect(()=> {
     if (!key || !channelUserID || (channel.toLowerCase() !== userName.toLowerCase())) return
     pubsub(key, channelUserID, handlePubsubMessage)
-  }, [channelUserID])
+  }, [channelUserID, key, userName, channel])
 
   //Fetch badges
   useEffect(()=>{
@@ -264,7 +264,7 @@ function App() {
       setBadge(badgeCollection)
     })()
 
-  }, [channelUserID])
+  }, [channelUserID, key])
 
   const handleChecked = useCallback((id) =>{
     if (!checked.has(id)) {
@@ -317,7 +317,7 @@ function App() {
     return (()=>{
       client.removeListener("message", handleMessage);
     })
-  }, [connected])
+  }, [connected, handleMessage])
   
 
   return (

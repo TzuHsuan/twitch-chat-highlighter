@@ -37,11 +37,16 @@ const Message = ({msgStr, emotes}) => {
 
 const SubMessage = (props) => {
   props = props.props
-  console.log(props)
-  console.log(props.displayName.toLowerCase())
   const timestamp = new Date(parseInt(props.timestamp));
+
+  let emotes = {}
+  props.emotes.forEach(emote => {
+    emotes[emote.id] = [...emotes[emote.id], `${emote.start}-${emote.end}`]
+  })
+
   let isGift = props.recipientUser? true : false
-  let user = props.displayName.toLowerCase() === props.username ? props.displayName : `${props.displayName}(${props.username})`
+  let user = !props.username ? '匿名' :
+    props.displayName?.toLowerCase() === props.username ? props.displayName : `${props.displayName}(${props.username})`
   let recipient = props.recipientDisplay?.toLowerCase() === props.recipientUser ? props.recipientDisplay : `${props.recipientDisplay}(${props.recipientUser})`
   let message = isGift ? 
                   `${user} 贈送了層級 ${props.tier} 的訂閱給 ${recipient} 現在訂閱 ${props.months} 個月了！` :
@@ -54,7 +59,7 @@ const SubMessage = (props) => {
         </div>
           <div>{timestamp.getHours()}:{("00" + timestamp.getMinutes()).slice(-2)}</div>
       </div>
-      {props.message && <Message msgStr={props.message} emotes={props.emotes}/>}
+      {props.message && <Message msgStr={props.message} emotes={emotes}/>}
     </div>)
 }
 

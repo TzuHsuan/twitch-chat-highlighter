@@ -1,16 +1,17 @@
 export default function pubsub(token, channelID ,messageHandler) {
-    const heartbeatInterval = 7 * 1000 //ms
+    const heartbeatInterval = 4 * 60 * 1000 //ms
     var ws;
     var heartbeatTimer
     var pongTimer
 
     function heartbeat() {
         let message = {
-            type: 'ping'
+            type: 'PING'
         }
         ws.send(JSON.stringify(message))
         pongTimer = setTimeout(()=> {
             if (!ws) return
+            console.log('PING TIMEOUT, closing connection')
             ws.close()
         }, 10000)
         heartbeatTimer = setTimeout(heartbeat, heartbeatInterval + Math.random() * 500)
@@ -21,7 +22,7 @@ export default function pubsub(token, channelID ,messageHandler) {
         ws = new WebSocket('wss://pubsub-edge.twitch.tv')
 
         ws.onopen = () => {
-            console.log('info: socket opened')
+            console.log('INFO: socket opened')
             listen()
             setTimeout(heartbeat, heartbeatInterval + Math.random() * 500)
         }
@@ -42,7 +43,7 @@ export default function pubsub(token, channelID ,messageHandler) {
             let message = JSON.parse(event.data)
             switch (message.type) {
                 case 'PONG': 
-                    clearInterval(pongTimer)
+                    clearTimeout(pongTimer)
                     break;
                 case 'RECONNECT':
                     console.log('INFO: Socket Reconnecting')
@@ -51,7 +52,7 @@ export default function pubsub(token, channelID ,messageHandler) {
                 case 'RESPONSE':
                     message.error? console.log('ERR: Listen failed ' + message.error):console.log('INFO: Listen success')
                     break;
-                case 'message':
+                case 'MESSAGE':
                     parsePayload(message.data)
             }
         }
@@ -105,7 +106,6 @@ export default function pubsub(token, channelID ,messageHandler) {
                 auth_token: token
             }
         }
-        console.log(ws)
         setTimeout(()=>ws.send(JSON.stringify(message)), 5000)
     }
 
