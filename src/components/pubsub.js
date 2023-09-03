@@ -59,7 +59,6 @@ export default function pubsub(token, channelID ,messageHandler) {
     }
 
     const parsePayload = (payload) => {
-        console.log(payload)
         let topic = payload.topic
         let message = JSON.parse(payload.message)
         

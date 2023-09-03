@@ -14,48 +14,6 @@ const TwitchAuth = "https://id.twitch.tv/oauth2/authorize?response_type=token" +
                    "&redirect_uri=http://localhost:3000/chat" + 
                    "&scope=" + encodeURIComponent("chat:edit chat:read channel:read:redemptions channel:read:subscriptions")
 
-// const testMsg = [
-//   {
-//     type: "points",
-//     id: "points-123",
-//     displayName: "海海",
-//     username: "zuphest",
-//     timestamp: "2019-11-12T01:29:34.98329743Z",
-//     item: "西瓜"
-//   },
-//   {
-//     type: "points",
-//     id: "points-1234",
-//     displayName: "海海",
-//     username: "zuphest",
-//     timestamp: "2019-11-12T01:29:34.98329743Z",
-//     item: "香蕉",
-//     message: "短的比較好"
-//   },
-  
-//   {
-//     type: "sub",
-//     id: "sub-123",
-//     displayName: "海海",
-//     username: "zuphest",
-//     timestamp: "2019-11-12T01:29:34.98329743Z",
-//     tier: "1",
-//     months: "5"
-//   },
-//   {
-//     type: "sub",
-//     id: "sub-1234",
-//     displayName: "海海",
-//     username: "zuphest",
-//     timestamp: "2019-11-12T01:29:34.98329743Z",
-//     tier: "1",
-//     months: "5",
-//     recipientUser: "ucnya",
-//     recipientDisplay: "卯咪"
-//   },
-
-// ]
-
 let client
 const botsList = new Set(['streamelements', 'nightbot'])
 
