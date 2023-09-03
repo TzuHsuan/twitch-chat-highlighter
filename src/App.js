@@ -4,6 +4,7 @@ import {LanguageContext, languages} from './components/languageContext';
 import "./App.css";
 import tmi from "tmi.js";
 import settingsIcon from './settings.svg';
+import pubsub from "./components/pubsub";
 
 //const channel = new URL(window.location).searchParams.get('channel'); 
 //document.title = `${channel}的聊天室`
@@ -13,6 +14,47 @@ const TwitchAuth = "https://id.twitch.tv/oauth2/authorize?response_type=token" +
                    "&redirect_uri=http://localhost:3000/chat" + 
                    "&scope=" + encodeURIComponent("chat:edit chat:read channel:read:redemptions channel:read:subscriptions")
 
+// const testMsg = [
+//   {
+//     type: "points",
+//     id: "points-123",
+//     displayName: "海海",
+//     username: "zuphest",
+//     timestamp: "2019-11-12T01:29:34.98329743Z",
+//     item: "西瓜"
+//   },
+//   {
+//     type: "points",
+//     id: "points-1234",
+//     displayName: "海海",
+//     username: "zuphest",
+//     timestamp: "2019-11-12T01:29:34.98329743Z",
+//     item: "香蕉",
+//     message: "短的比較好"
+//   },
+  
+//   {
+//     type: "sub",
+//     id: "sub-123",
+//     displayName: "海海",
+//     username: "zuphest",
+//     timestamp: "2019-11-12T01:29:34.98329743Z",
+//     tier: "1",
+//     months: "5"
+//   },
+//   {
+//     type: "sub",
+//     id: "sub-1234",
+//     displayName: "海海",
+//     username: "zuphest",
+//     timestamp: "2019-11-12T01:29:34.98329743Z",
+//     tier: "1",
+//     months: "5",
+//     recipientUser: "ucnya",
+//     recipientDisplay: "卯咪"
+//   },
+
+// ]
 
 let client
 const botsList = new Set(['streamelements', 'nightbot'])
@@ -42,7 +84,7 @@ function App() {
     setUserName('')
   }
 
-  //Strip access token from URI if present
+  //Strip hash and extract access token from URI if present
   useEffect(() => {
     if (document.location.hash === '') return
     let params = (document.location.hash.substring(1)).split('&')
@@ -145,7 +187,7 @@ function App() {
   useEffect(() => {
     setTimeout(() => {
       let user = userRef.current
-      let login = user? {username: user, password: "oauth:"+keyRef.current} : {}
+      let login = user? {username: user, password: "oauth:" + keyRef.current} : {}
 
       client = new tmi.Client({
         connection: {
@@ -182,6 +224,12 @@ function App() {
       .catch(console.log);
     })
   }, [connected, channel])
+
+  //connect websocket
+  useEffect(()=> {
+    if (!key || !channelUserID || (channel.toLowerCase() !== userName.toLowerCase())) return
+    pubsub(key, channelUserID, handlePubsubMessage)
+  }, [channelUserID])
 
   //Fetch badges
   useEffect(()=>{
@@ -242,6 +290,7 @@ function App() {
     const room = tags['room-id'];
     if(room !== channelID) {setChannelID(room)}
     let msgObj = {
+      type: "chat",
       id: self? Date.now():tags.id,
       displayName: tags['display-name'],
       username: tags.username,
@@ -253,6 +302,10 @@ function App() {
     }
     setMessages(prevMsgs => [msgObj, ...prevMsgs.slice(0,150)]);
   },[channelID])
+
+  const handlePubsubMessage = (msgObj) => {
+    setMessages(prevMsgs => [msgObj, ...prevMsgs.slice(0,150)])
+  }
 
   useEffect(()=>{
     if(autoScroll) scrollToBottom()

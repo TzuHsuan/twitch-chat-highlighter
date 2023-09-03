@@ -35,10 +35,34 @@ const Message = ({msgStr, emotes}) => {
   })}</div>)
 }
 
+const SubMessage = (props) => {
+  props = props.props
+  console.log(props)
+  console.log(props.displayName.toLowerCase())
+  const timestamp = new Date(parseInt(props.timestamp));
+  let isGift = props.recipientUser? true : false
+  let user = props.displayName.toLowerCase() === props.username ? props.displayName : `${props.displayName}(${props.username})`
+  let recipient = props.recipientDisplay?.toLowerCase() === props.recipientUser ? props.recipientDisplay : `${props.recipientDisplay}(${props.recipientUser})`
+  let message = isGift ? 
+                  `${user} 贈送了層級 ${props.tier} 的訂閱給 ${recipient} 現在訂閱 ${props.months} 個月了！` :
+                  `${user} 訂閱了層級 ${props.tier} 。總共訂閱 ${props.months} 個月了！`
+  return (
+    <div className={`msgContainer${props.isNew?' new':''}`} onClick={()=>props.markChecked(props.username)}>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <div>
+          {message}
+        </div>
+          <div>{timestamp.getHours()}:{("00" + timestamp.getMinutes()).slice(-2)}</div>
+      </div>
+      {props.message && <Message msgStr={props.message} emotes={props.emotes}/>}
+    </div>)
+}
+
 export const Chatbox = React.memo((props) => {
     const timestamp = new Date(parseInt(props.timestamp));
     
-    return(
+    return(<>
+    {(props.type==="chat") && <>
     <div className={`msgContainer${props.isNew?' new':''}`} onClick={()=>props.markChecked(props.username)}>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <div style={{color:props.color}}>
@@ -49,4 +73,21 @@ export const Chatbox = React.memo((props) => {
       
     <Message msgStr={props.message} emotes={props.emotes} />
     </div>
+  </>}
+
+    {(props.type==="points") && <>
+    <div className={`msgContainer${props.isNew?' new':''}`} onClick={()=>props.markChecked(props.username)}>
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <div>
+          {(props.displayName.toLowerCase() === props.username) ? props.displayName : `${props.displayName}(${props.username})`} <span>兌換了 {props.item}</span>
+        </div>
+          <div>{timestamp.getHours()}:{("00" + timestamp.getMinutes()).slice(-2)}</div>
+      </div>
+      {props.message && <Message msgStr={props.message}/>}
+    </div>
+  </>}
+
+    {(props.type==="sub") && <SubMessage props={props} />}
+
+  </>
   )})
