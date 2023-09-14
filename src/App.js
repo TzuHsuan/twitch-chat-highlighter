@@ -11,7 +11,7 @@ import pubsub from "./components/pubsub";
 
 const TwitchAuth = "https://id.twitch.tv/oauth2/authorize?response_type=token" +
                    "&client_id=" + "b37i4lohsntm7xwnhafv54cflutqmp" +
-                   "&redirect_uri=http://localhost:3000/chat" + 
+                   "&redirect_uri=https://zuphertron.cc/chat" + 
                    "&scope=" + encodeURIComponent("chat:edit chat:read channel:read:redemptions channel:read:subscriptions")
 
 let client

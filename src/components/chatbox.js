@@ -37,6 +37,7 @@ const Message = ({msgStr, emotes}) => {
 
 const SubMessage = (props) => {
   props = props.props
+  console.log(props)
   const timestamp = new Date(parseInt(props.timestamp));
 
   let emotes = {}

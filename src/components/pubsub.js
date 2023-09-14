@@ -83,7 +83,7 @@ export default function pubsub(token, channelID ,messageHandler) {
     const handleSubs = (message) => {
         let msgObj = {
             type: "sub",
-            id: "sub-" + message.recipientUser || message.user_name,
+            id: "sub-" + (message.recipient_user_name || message.user_name),
             displayName: message.display_name,
             username: message.user_name,
             timestamp: message.time,
@@ -101,7 +101,8 @@ export default function pubsub(token, channelID ,messageHandler) {
         let message = {
             type: "LISTEN",
             data: {
-                topics: ["channel-points-channel-v1."+channelID, "channel-subscribe-events-v1."+channelID],
+                // topics: ["channel-points-channel-v1."+channelID, "channel-subscribe-events-v1."+channelID],
+                topics: ["channel-points-channel-v1."+channelID],
                 auth_token: token
             }
         }
